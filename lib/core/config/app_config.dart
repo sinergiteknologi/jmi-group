@@ -1,0 +1,65 @@
+class Company {
+  const Company({
+    required this.businessCode,
+    required this.name,
+    required this.shortName,
+    required this.imageFolder,
+    required this.tagline,
+  });
+
+  final String businessCode;
+  final String name;
+  final String shortName;
+  final String imageFolder;
+  final String tagline;
+
+  static const jmi = Company(
+    businessCode: 'VenusERP10',
+    name: 'PT Jaya Makmur Indonesia',
+    shortName: 'JMI',
+    imageFolder: 'JMI_Images',
+    tagline: 'Distribusi & perdagangan umum',
+  );
+  static const mcc = Company(
+    businessCode: 'VenusERP21',
+    name: 'PT Mega Cahaya Cilacap',
+    shortName: 'MCC',
+    imageFolder: 'MCC_Images',
+    tagline: 'Distribusi wilayah Cilacap',
+  );
+  static const mmi = Company(
+    businessCode: 'VenusERP25',
+    name: 'PT Mainan Mandiri Indonesia',
+    shortName: 'MMI',
+    imageFolder: 'MMI_Images',
+    tagline: 'Mainan & produk anak',
+  );
+
+  static const all = [jmi, mcc, mmi];
+
+  static Company byCode(String? code) =>
+      all.firstWhere((c) => c.businessCode == code, orElse: () => jmi);
+
+  static Company byShortName(String? value) =>
+      all.firstWhere((c) => c.shortName == value, orElse: () => jmi);
+}
+
+abstract final class AppConfig {
+  static const packageName = 'com.Sinergi.VenusERPJMGroup_Client';
+  static const defaultHost = 'production2.sinergiteknologi.co.id';
+  static const servicePath =
+      '/VenusERPJMIGroupClientMServices/mobileservices.asmx';
+  static const soapNamespace = 'http://VenusERPJMIGroupClientMServices.org/';
+  static const mediaBase =
+      'http://$defaultHost/VenusERPJMIGroupClientMServices';
+
+  static String serviceUrl(String host) =>
+      'http://${host.isEmpty ? defaultHost : host}$servicePath';
+
+  static String imageUrl(Company company, String fileName) {
+    final name = fileName.trim();
+    if (name.isEmpty || name == '-') return '';
+    if (name.startsWith('http://') || name.startsWith('https://')) return name;
+    return '$mediaBase/${company.imageFolder}/$name';
+  }
+}
