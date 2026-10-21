@@ -1,11 +1,11 @@
 {
-    "name": "venus_jmi_group",
-    "short_name": "venus_jmi_group",
+    "name": "Venus JMI Group",
+    "short_name": "JMI Group",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0B5FA5",
+    "theme_color": "#0B5FA5",
+    "description": "Aplikasi pemesanan customer VenusERP JMI Group (JMI, MCC, MMI).",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
