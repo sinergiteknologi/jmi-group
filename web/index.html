@@ -32,8 +32,115 @@
 
   <title>Venus JMI Group</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    #pwa-install {
+      position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 9999;
+      display: none; align-items: center; gap: 12px;
+      max-width: 520px; margin: 0 auto; padding: 12px 14px;
+      background: #fff; border-radius: 18px;
+      box-shadow: 0 12px 32px rgba(18, 38, 58, .22);
+      font-family: Roboto, Arial, sans-serif; color: #12263A;
+    }
+    #pwa-install.show { display: flex; }
+    #pwa-install img { width: 48px; height: 48px; border-radius: 12px; flex: none; }
+    #pwa-install .txt { flex: 1; min-width: 0; }
+    #pwa-install .t { font-size: 15px; font-weight: 700; }
+    #pwa-install .s { font-size: 12.5px; color: #5B6B7B; margin-top: 2px; line-height: 1.35; }
+    #pwa-install-btn {
+      flex: none; border: 0; cursor: pointer; padding: 10px 18px;
+      border-radius: 12px; background: #0B5FA5; color: #fff;
+      font-size: 14px; font-weight: 700;
+    }
+    #pwa-install-btn:active { background: #094E87; }
+    #pwa-install-close {
+      flex: none; border: 0; background: transparent; cursor: pointer;
+      color: #8A99A8; font-size: 20px; line-height: 1; padding: 4px 6px;
+    }
+  </style>
 </head>
 <body>
+  <div id="pwa-install" role="dialog" aria-label="Install aplikasi">
+    <img src="icons/Icon-192.png" alt="Venus JMI Group">
+    <div class="txt">
+      <div class="t">Install Venus JMI Group</div>
+      <div class="s" id="pwa-install-sub">Pasang aplikasi di perangkat Anda untuk akses lebih cepat.</div>
+    </div>
+    <button id="pwa-install-btn" type="button">Install</button>
+    <button id="pwa-install-close" type="button" aria-label="Tutup">&times;</button>
+  </div>
+  <script>
+    (function () {
+      var DISMISS_KEY = 'jmi_pwa_install_dismissed_at';
+      var COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
+      var banner = document.getElementById('pwa-install');
+      var sub = document.getElementById('pwa-install-sub');
+      var btn = document.getElementById('pwa-install-btn');
+      var deferredPrompt = null;
+      var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      var isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+
+      function dismissedRecently() {
+        try {
+          var t = parseInt(window.localStorage.getItem(DISMISS_KEY) || '0', 10);
+          return t > 0 && (Date.now() - t) < COOLDOWN_MS;
+        } catch (e) { return false; }
+      }
+      function rememberDismiss() {
+        try { window.localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {}
+      }
+      function showBanner() {
+        if (isStandalone || dismissedRecently()) return;
+        banner.classList.add('show');
+      }
+      function hideBanner() { banner.classList.remove('show'); }
+
+      async function promptInstall() {
+        if (!deferredPrompt) return false;
+        try {
+          await deferredPrompt.prompt();
+          var choice = await deferredPrompt.userChoice;
+          deferredPrompt = null;
+          if (choice && choice.outcome === 'accepted') { hideBanner(); return true; }
+        } catch (e) { /* prompt butuh interaksi user — tampilkan banner */ }
+        return false;
+      }
+
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (isStandalone || dismissedRecently()) return;
+        setTimeout(async function () {
+          var accepted = await promptInstall();
+          if (!accepted) showBanner();
+        }, 600);
+      });
+
+      window.addEventListener('appinstalled', function () {
+        deferredPrompt = null;
+        hideBanner();
+        try { window.localStorage.removeItem(DISMISS_KEY); } catch (e) {}
+      });
+
+      btn.addEventListener('click', async function () {
+        if (deferredPrompt) {
+          var accepted = await promptInstall();
+          if (!accepted) { rememberDismiss(); hideBanner(); }
+        } else if (isIOS) {
+          sub.textContent = 'Ketuk tombol Bagikan di browser, lalu pilih "Tambah ke Layar Utama".';
+          btn.style.display = 'none';
+        }
+      });
+
+      document.getElementById('pwa-install-close').addEventListener('click', function () {
+        rememberDismiss();
+        hideBanner();
+      });
+
+      if (isIOS && !isStandalone && !dismissedRecently()) {
+        window.addEventListener('load', function () { setTimeout(showBanner, 1200); });
+      }
+    })();
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
