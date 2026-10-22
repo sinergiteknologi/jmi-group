@@ -32,7 +32,12 @@ class ApiClient {
           .post(
             Uri.parse(_endpoint(operation)),
             headers: {'Content-Type': 'application/json; charset=utf-8'},
-            body: jsonEncode({...parameters, 'host': host}),
+            body: jsonEncode({
+              ...parameters,
+              'host': host,
+              if (AppConfig.implementServer.isNotEmpty)
+                'ImplementServer': AppConfig.implementServer,
+            }),
           )
           .timeout(const Duration(seconds: 60));
     } on TimeoutException {

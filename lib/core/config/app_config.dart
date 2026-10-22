@@ -48,7 +48,7 @@ class Company {
 
 abstract final class AppConfig {
   static const packageName = 'com.Sinergi.VenusERPJMGroup_Client';
-  static const defaultHost = 'production2.sinergiteknologi.co.id';
+  static const defaultHost = 'api.sinergiteknologi.co.id';
   static const servicePath =
       '/VenusERPJMIGroupClientMServices/mobileservices.asmx';
   static const soapNamespace = 'http://VenusERPJMIGroupClientMServices.org/';
@@ -68,6 +68,11 @@ abstract final class AppConfig {
     'API_BASE',
     defaultValue: 'https://api.sinergiteknologi.co.id/NewAPIVenusERPJMGroup',
   );
+
+  /// When non-empty, sent as `ImplementServer` on every request so the
+  /// backend routes all databases to the implementation server.
+  /// Set with `--dart-define=IMPLEMENT_SERVER=true` (or a host/IP).
+  static const implementServer = String.fromEnvironment('IMPLEMENT_SERVER');
 
   /// Same-origin serverless proxy (see `api/proxy.js`) used by web builds
   /// when no [corsProxy] is given. Keeps HTTPS pages from calling the
