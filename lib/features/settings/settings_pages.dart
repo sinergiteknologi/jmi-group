@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/network/soap_client.dart';
+import '../../core/network/api_client.dart';
 import '../../data/models/models.dart';
 import '../../shared/widgets.dart';
 import '../../state/app_state.dart';
@@ -44,7 +44,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) {
         showMessage(
           context,
-          e is SoapException ? e.message : 'Gagal memuat kategori.',
+          e is ApiException ? e.message : 'Gagal memuat kategori.',
         );
       }
     } finally {
@@ -288,7 +288,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (mounted) {
         showMessage(
           context,
-          e is SoapException ? e.message : 'Gagal mengganti password.',
+          e is ApiException ? e.message : 'Gagal mengganti password.',
         );
       }
     } finally {

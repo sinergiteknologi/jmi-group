@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/config/app_config.dart';
-import '../../core/network/soap_client.dart';
+import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/format.dart';
 import '../../data/models/models.dart';
@@ -159,7 +159,7 @@ class _LoginPageState extends State<LoginPage> {
       );
     } catch (e) {
       if (mounted) {
-        showMessage(context, e is SoapException ? e.message : 'Login gagal.');
+        showMessage(context, e is ApiException ? e.message : 'Login gagal.');
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -372,7 +372,7 @@ class _RegisterPageState extends State<RegisterPage> {
       if (mounted) {
         showMessage(
           context,
-          e is SoapException ? e.message : 'Registrasi gagal.',
+          e is ApiException ? e.message : 'Registrasi gagal.',
         );
       }
     } finally {

@@ -62,6 +62,13 @@ abstract final class AppConfig {
   /// ASMX service or the server already sends CORS headers.
   static const corsProxy = String.fromEnvironment('CORS_PROXY');
 
+  /// Base URL of the Node.js REST API (NewAPIVenusERPJMGroup).
+  /// Override with `--dart-define=API_BASE=https://...` when needed.
+  static const apiBase = String.fromEnvironment(
+    'API_BASE',
+    defaultValue: 'https://api.sinergiteknologi.co.id/NewAPIVenusERPJMGroup',
+  );
+
   /// Same-origin serverless proxy (see `api/proxy.js`) used by web builds
   /// when no [corsProxy] is given. Keeps HTTPS pages from calling the
   /// HTTP-only ASMX backend directly (mixed content + CORS).

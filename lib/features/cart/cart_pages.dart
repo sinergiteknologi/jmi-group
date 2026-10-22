@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/network/soap_client.dart';
+import '../../core/network/api_client.dart';
 import '../../core/utils/format.dart';
 import '../../data/models/models.dart';
 import '../../shared/widgets.dart';
@@ -301,7 +301,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       if (mounted) {
         showMessage(
           context,
-          e is SoapException ? e.message : 'Gagal memuat checkout.',
+          e is ApiException ? e.message : 'Gagal memuat checkout.',
         );
       }
     } finally {
@@ -365,7 +365,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       if (mounted) {
         showMessage(
           context,
-          e is SoapException ? e.message : 'Gagal mengirim pesanan.',
+          e is ApiException ? e.message : 'Gagal mengirim pesanan.',
         );
       }
     } finally {

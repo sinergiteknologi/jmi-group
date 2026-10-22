@@ -4,7 +4,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/config/app_config.dart';
-import '../../core/network/soap_client.dart';
+import '../../core/network/api_client.dart';
 import '../../core/utils/format.dart';
 import '../../data/models/models.dart';
 import '../../shared/widgets.dart';
@@ -115,7 +115,7 @@ class _ProductListPageState extends State<ProductListPage> {
       if (_products.isEmpty) {
         if (mounted) {
           setState(
-            () => _error = e is SoapException
+            () => _error = e is ApiException
                 ? e.message
                 : 'Gagal memuat produk.',
           );

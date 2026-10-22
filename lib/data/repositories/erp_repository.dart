@@ -1,14 +1,14 @@
 import '../../core/config/app_config.dart';
-import '../../core/network/soap_client.dart';
+import '../../core/network/api_client.dart';
 import '../../core/storage/app_database.dart';
 import '../../core/storage/session_store.dart';
 import '../../core/utils/format.dart';
 import '../models/models.dart';
 
 class ErpRepository {
-  ErpRepository({required this.soap, required this.store, required this.db});
+  ErpRepository({required this.api, required this.store, required this.db});
 
-  final SoapClient soap;
+  final ApiClient api;
   final SessionStore store;
   final AppDatabase db;
 
@@ -22,7 +22,7 @@ class ErpRepository {
   Future<UserSession> _session() async {
     final session = await store.session();
     if (session == null) {
-      throw SoapException('Sesi berakhir. Silakan login kembali.');
+      throw ApiException('Sesi berakhir. Silakan login kembali.');
     }
     return session;
   }
@@ -32,7 +32,7 @@ class ErpRepository {
     Map<String, String> params, {
     bool withBusiness = true,
   }) async {
-    return soap.call(
+    return api.call(
       host: await _host(),
       operation: operation,
       parameters: {if (withBusiness) 'sBisnis': await _business(), ...params},
@@ -41,7 +41,7 @@ class ErpRepository {
 
   // --- Splash ---
   Future<String> getVersion() async {
-    final result = await soap.call(
+    final result = await api.call(
       host: AppConfig.defaultHost,
       operation: 'Versi',
       parameters: {'sAppName': AppConfig.packageName},
@@ -50,7 +50,7 @@ class ErpRepository {
   }
 
   Future<List<BusinessServer>> getBusinesses() async {
-    final result = await soap.call(
+    final result = await api.call(
       host: AppConfig.defaultHost,
       operation: 'GetDataBisnis',
       parameters: {'sAppName': AppConfig.packageName},
@@ -89,7 +89,7 @@ class ErpRepository {
     });
     final session = UserSession.fromLogin(result, username);
     if (!session.isValid) {
-      throw SoapException('Login gagal. Periksa username/password Anda.');
+      throw ApiException('Login gagal. Periksa username/password Anda.');
     }
     await store.saveSession(session, password);
     return session;
@@ -118,7 +118,7 @@ class ErpRepository {
       'prmTOP': top,
     });
     if ((result['Pref1'] ?? '').isEmpty) {
-      throw SoapException('Registrasi gagal. Coba lagi.');
+      throw ApiException('Registrasi gagal. Coba lagi.');
     }
   }
 
@@ -129,7 +129,7 @@ class ErpRepository {
       'prmNewPassword': newPassword,
     });
     if ((result['Status'] ?? '').toLowerCase() == 'false') {
-      throw SoapException('Gagal mengganti password.');
+      throw ApiException('Gagal mengganti password.');
     }
     await store.saveSession(session, newPassword);
   }
@@ -209,7 +209,7 @@ class ErpRepository {
       'prmSalesCode': session.salesCode,
     });
     if ((result['Status'] ?? '').toLowerCase() == 'false') {
-      throw SoapException('Gagal mengirim pesanan. Coba lagi.');
+      throw ApiException('Gagal mengirim pesanan. Coba lagi.');
     }
   }
 

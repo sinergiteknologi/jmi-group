@@ -1,7 +1,7 @@
 const http = require('http');
 
 const ALLOWED_HOST = /(^|\.)sinergiteknologi\.co\.id$/i;
-const ALLOWED_PATH = /^\/VenusERPJMIGroupClientMServices\//;
+const ALLOWED_PATH = /^\/(VenusERPJMIGroupClientMServices|NewAPIVenusERPJMGroup)\//;
 const TIMEOUT_MS = 60000;
 
 module.exports = async (req, res) => {

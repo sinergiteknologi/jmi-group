@@ -6,7 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import 'app.dart';
-import 'core/network/soap_client.dart';
+import 'core/network/api_client.dart';
 import 'core/storage/app_database.dart';
 import 'core/storage/session_store.dart';
 import 'data/repositories/erp_repository.dart';
@@ -19,7 +19,7 @@ Future<void> main() async {
 
   final store = SessionStore();
   final db = AppDatabase();
-  final repository = ErpRepository(soap: SoapClient(), store: store, db: db);
+  final repository = ErpRepository(api: ApiClient(), store: store, db: db);
   final state = AppState(repository: repository, store: store, db: db);
   await state.bootstrap();
 

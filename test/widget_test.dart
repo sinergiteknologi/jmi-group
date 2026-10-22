@@ -1,26 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:venus_jmi_group/core/network/soap_client.dart';
+import 'package:venus_jmi_group/core/network/api_client.dart';
 import 'package:venus_jmi_group/core/utils/format.dart';
 import 'package:venus_jmi_group/data/models/models.dart';
 
 void main() {
-  test('SOAP result flattens Pref fields', () {
-    final result = SoapClient.parseResult('''
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>
-    <LoginResponse xmlns="http://VenusERPJMIGroupClientMServices.org/">
-      <LoginResult>
-        <DatamReport>
-          <Pref1>BR01</Pref1>
-          <Pref2>Jakarta</Pref2>
-        </DatamReport>
-      </LoginResult>
-    </LoginResponse>
-  </soap:Body>
-</soap:Envelope>
-''');
+  test('REST result decodes Pref fields from JSON', () {
+    final result = ApiClient.decodeResult(
+      '{"Pref1":"BR01","Pref2":"Jakarta","Pref3":null,"Status":"1"}',
+    );
     expect(result['Pref1'], 'BR01');
     expect(result['Pref2'], 'Jakarta');
+    expect(result['Pref3'], '');
+    expect(result['Status'], '1');
+  });
+
+  test('REST error payload raises ApiException', () {
+    expect(
+      () => ApiClient.decodeResult('{"error":"upstream boom"}'),
+      throwsA(isA<ApiException>()),
+    );
   });
 
   test('Product parses pipe-delimited Pref payload', () {

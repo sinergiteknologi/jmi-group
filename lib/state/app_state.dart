@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/config/app_config.dart';
-import '../core/network/soap_client.dart';
+import '../core/network/api_client.dart';
 import '../core/storage/app_database.dart';
 import '../core/storage/session_store.dart';
 import '../data/models/models.dart';
@@ -37,7 +37,7 @@ class AppState extends ChangeNotifier {
       try {
         businesses = await repository.getBusinesses();
       } catch (e) {
-        bootstrapError = e is SoapException ? e.message : null;
+        bootstrapError = e is ApiException ? e.message : null;
       }
     } catch (e) {
       bootstrapError = 'Gagal memuat data awal.';

@@ -1,0 +1,14 @@
+.dart_tool/
+build/
+.git/
+.idea/
+.vscode/
+android/
+ios/
+linux/
+macos/
+windows/
+test/
+*.iml
+.env*
+cors_proxy.py
