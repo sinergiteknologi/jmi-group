@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "if [ ! -d \"$HOME/flutter\" ]; then git clone --depth 1 -b stable https://github.com/flutter/flutter.git \"$HOME/flutter\"; fi && export PATH=\"$PATH:$HOME/flutter/bin\" && flutter pub get && flutter build web --release",
+  "buildCommand": "if [ ! -d \"$HOME/flutter\" ]; then git clone --depth 1 -b stable https://github.com/flutter/flutter.git \"$HOME/flutter\"; fi && export PATH=\"$PATH:$HOME/flutter/bin\" && flutter pub get && flutter build web --release --dart-define=IMPLEMENT_SERVER=true",
   "outputDirectory": "build/web"
 }
