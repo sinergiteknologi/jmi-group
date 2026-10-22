@@ -39,6 +39,7 @@ dependencies:
   shared_preferences: 2.3.3
   flutter_secure_storage: ^9.2.2
   sqflite: ^2.3.3+1
+  sqflite_common_ffi_web: ^1.2.0
   path: ^1.9.0
   cached_network_image: ^3.4.1
   carousel_slider: ^5.0.0

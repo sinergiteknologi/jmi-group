@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
@@ -8,9 +9,10 @@ class AppDatabase {
 
   Future<Database> get database async {
     if (_db != null) return _db!;
-    final dir = await getDatabasesPath();
     _db = await openDatabase(
-      p.join(dir, 'VenusERPJMGroup_Client.db'),
+      kIsWeb
+          ? 'VenusERPJMGroup_Client.db'
+          : p.join(await getDatabasesPath(), 'VenusERPJMGroup_Client.db'),
       version: 1,
       onCreate: (db, _) async {
         await db.execute('CREATE TABLE IF NOT EXISTS M_VERSION (Version TEXT)');

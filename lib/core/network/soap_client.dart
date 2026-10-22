@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
 
@@ -55,11 +56,16 @@ class SoapClient {
         },
       );
 
+    final directUrl = AppConfig.serviceUrl(host);
+    final effectiveUrl = kIsWeb && AppConfig.corsProxy.isNotEmpty
+        ? '${AppConfig.corsProxy}$directUrl'
+        : directUrl;
+
     http.Response response;
     try {
       response = await _client
           .post(
-            Uri.parse(AppConfig.serviceUrl(host)),
+            Uri.parse(effectiveUrl),
             headers: {
               'Content-Type': 'text/xml; charset=utf-8',
               'SOAPAction': '${AppConfig.soapNamespace}$operation',

@@ -53,6 +53,13 @@ abstract final class AppConfig {
   static const mediaBase =
       'http://$defaultHost/VenusERPJMIGroupClientMServices';
 
+  /// Optional CORS proxy prefix for web builds, e.g.
+  /// `--dart-define=CORS_PROXY=http://localhost:8898/`.
+  /// The target URL is appended verbatim: `<proxy><full service URL>`.
+  /// Leave empty when the web app is hosted on the same origin as the
+  /// ASMX service or the server already sends CORS headers.
+  static const corsProxy = String.fromEnvironment('CORS_PROXY');
+
   static String serviceUrl(String host) =>
       'http://${host.isEmpty ? defaultHost : host}$servicePath';
 

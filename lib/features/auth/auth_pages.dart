@@ -105,7 +105,14 @@ class SplashPage extends StatelessWidget {
 
   Future<void> _select(BuildContext context, Company company) async {
     final state = context.read<AppState>();
-    await state.selectCompany(company);
+    try {
+      await state.selectCompany(company);
+    } catch (e) {
+      if (context.mounted) {
+        showMessage(context, 'Gagal menyiapkan data perusahaan: $e');
+      }
+      return;
+    }
     if (!context.mounted) return;
     Navigator.pushReplacement(
       context,
