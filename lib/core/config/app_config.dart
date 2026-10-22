@@ -6,6 +6,7 @@ class Company {
     required this.name,
     required this.shortName,
     required this.imageFolder,
+    required this.imageHost,
     required this.tagline,
   });
 
@@ -13,6 +14,7 @@ class Company {
   final String name;
   final String shortName;
   final String imageFolder;
+  final String imageHost;
   final String tagline;
 
   static const jmi = Company(
@@ -20,6 +22,7 @@ class Company {
     name: 'PT Jaya Makmur Indonesia',
     shortName: 'JMI',
     imageFolder: 'JMI_Images',
+    imageHost: 'production2.sinergiteknologi.co.id',
     tagline: 'Distribusi & perdagangan umum',
   );
   static const mcc = Company(
@@ -27,6 +30,7 @@ class Company {
     name: 'PT Mega Cahaya Cilacap',
     shortName: 'MCC',
     imageFolder: 'MCC_Images',
+    imageHost: 'production2.sinergiteknologi.co.id',
     tagline: 'Distribusi wilayah Cilacap',
   );
   static const mmi = Company(
@@ -34,6 +38,7 @@ class Company {
     name: 'PT Mainan Mandiri Indonesia',
     shortName: 'MMI',
     imageFolder: 'MMI_Images',
+    imageHost: 'production3.sinergiteknologi.co.id',
     tagline: 'Mainan & produk anak',
   );
 
@@ -52,9 +57,6 @@ abstract final class AppConfig {
   static const servicePath =
       '/VenusERPJMIGroupClientMServices/mobileservices.asmx';
   static const soapNamespace = 'http://VenusERPJMIGroupClientMServices.org/';
-  static const mediaBase =
-      'http://$defaultHost/VenusERPJMIGroupClientMServices';
-
   /// Optional CORS proxy prefix for web builds, e.g.
   /// `--dart-define=CORS_PROXY=http://localhost:8898/`.
   /// The target URL is appended verbatim: `<proxy><full service URL>`.
@@ -91,18 +93,10 @@ abstract final class AppConfig {
   static String imageUrl(Company company, String fileName) {
     final name = fileName.trim();
     if (name.isEmpty || name == '-') return '';
-    if (name.startsWith('https://')) return name;
-    if (name.startsWith('http://')) {
-      if (!kIsWeb) return name;
-      final uri = Uri.parse(name);
-      return proxiedUrl(uri.host, uri.path);
-    }
-    if (kIsWeb) {
-      return proxiedUrl(
-        defaultHost,
-        '/VenusERPJMIGroupClientMServices/${company.imageFolder}/$name',
-      );
-    }
-    return '$mediaBase/${company.imageFolder}/$name';
+    final path = name.startsWith('http://') || name.startsWith('https://')
+        ? Uri.parse(name).path
+        : '/VenusERPJMIGroupClientMServices/${company.imageFolder}/$name';
+    if (kIsWeb) return proxiedUrl(company.imageHost, path);
+    return 'http://${company.imageHost}$path';
   }
 }
