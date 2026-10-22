@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class Company {
   const Company({
     required this.businessCode,
@@ -60,13 +62,35 @@ abstract final class AppConfig {
   /// ASMX service or the server already sends CORS headers.
   static const corsProxy = String.fromEnvironment('CORS_PROXY');
 
+  /// Same-origin serverless proxy (see `api/proxy.js`) used by web builds
+  /// when no [corsProxy] is given. Keeps HTTPS pages from calling the
+  /// HTTP-only ASMX backend directly (mixed content + CORS).
+  static const webProxyPath = '/api/proxy';
+
+  static String resolvedHost(String host) =>
+      host.isEmpty ? defaultHost : host;
+
   static String serviceUrl(String host) =>
-      'http://${host.isEmpty ? defaultHost : host}$servicePath';
+      'http://${resolvedHost(host)}$servicePath';
+
+  static String proxiedUrl(String host, String path) =>
+      '$webProxyPath?host=${resolvedHost(host)}&path=${Uri.encodeComponent(path)}';
 
   static String imageUrl(Company company, String fileName) {
     final name = fileName.trim();
     if (name.isEmpty || name == '-') return '';
-    if (name.startsWith('http://') || name.startsWith('https://')) return name;
+    if (name.startsWith('https://')) return name;
+    if (name.startsWith('http://')) {
+      if (!kIsWeb) return name;
+      final uri = Uri.parse(name);
+      return proxiedUrl(uri.host, uri.path);
+    }
+    if (kIsWeb) {
+      return proxiedUrl(
+        defaultHost,
+        '/VenusERPJMIGroupClientMServices/${company.imageFolder}/$name',
+      );
+    }
     return '$mediaBase/${company.imageFolder}/$name';
   }
 }

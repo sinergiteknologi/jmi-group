@@ -57,9 +57,11 @@ class SoapClient {
       );
 
     final directUrl = AppConfig.serviceUrl(host);
-    final effectiveUrl = kIsWeb && AppConfig.corsProxy.isNotEmpty
+    final effectiveUrl = !kIsWeb
+        ? directUrl
+        : AppConfig.corsProxy.isNotEmpty
         ? '${AppConfig.corsProxy}$directUrl'
-        : directUrl;
+        : AppConfig.proxiedUrl(host, AppConfig.servicePath);
 
     http.Response response;
     try {
