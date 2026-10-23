@@ -10,113 +10,444 @@ import '../../shared/widgets.dart';
 import '../../state/app_state.dart';
 import '../shell/main_shell.dart';
 
-class SplashPage extends StatelessWidget {
+class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final state = context.watch<AppState>();
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 28),
-            const Icon(
-              Icons.storefront_rounded,
-              size: 56,
-              color: AppColors.primary,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Venus JMI Group',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Pesan produk, pantau pengiriman,\ndan kelola piutang dalam satu aplikasi.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600, height: 1.4),
-            ),
-            if (state.versionInfo != null && state.versionInfo!.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Chip(label: Text('Versi server ${state.versionInfo}')),
-            ],
-            const SizedBox(height: 28),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Pilih perusahaan',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: Company.all.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final company = Company.all[index];
-                  return Card(
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-                      leading: CircleAvatar(
-                        radius: 28,
-                        backgroundColor: AppColors.primary.withValues(
-                          alpha: 0.1,
-                        ),
-                        child: Text(
-                          company.shortName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        company.name,
-                        style: const TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      subtitle: Text(company.tagline),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 18),
-                      onTap: () => _select(context, company),
-                    ),
-                  );
-                },
-              ),
-            ),
-            if (state.bootstrapError != null)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  state.bootstrapError!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.orange.shade800),
-                ),
-              ),
-          ],
-        ),
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _motion;
+  late final Animation<double> _heroFade;
+  late final Animation<Offset> _heroSlide;
+  late final Animation<double> _listFade;
+
+  @override
+  void initState() {
+    super.initState();
+    _motion = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _heroFade = CurvedAnimation(
+      parent: _motion,
+      curve: const Interval(0, 0.45, curve: Curves.easeOut),
+    );
+    _heroSlide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _motion,
+        curve: const Interval(0, 0.5, curve: Curves.easeOutCubic),
       ),
     );
+    _listFade = CurvedAnimation(
+      parent: _motion,
+      curve: const Interval(0.28, 1, curve: Curves.easeOut),
+    );
+    _motion.forward();
   }
 
-  Future<void> _select(BuildContext context, Company company) async {
+  @override
+  void dispose() {
+    _motion.dispose();
+    super.dispose();
+  }
+
+  Future<void> _select(Company company) async {
     final state = context.read<AppState>();
     try {
       await state.selectCompany(company);
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         showMessage(context, 'Gagal menyiapkan data perusahaan: $e');
       }
       return;
     }
-    if (!context.mounted) return;
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LoginPage()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    return Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const _SplashBackdrop(),
+          SafeArea(
+            bottom: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: FadeTransition(
+                    opacity: _heroFade,
+                    child: SlideTransition(
+                      position: _heroSlide,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(28, 20, 28, 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Spacer(),
+                            Text(
+                              'VENUS',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.72),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 4.2,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'JMI Group',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 40,
+                                fontWeight: FontWeight.w800,
+                                height: 1.05,
+                                letterSpacing: -0.8,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 320),
+                              child: Text(
+                                'Pesan produk, pantau pengiriman, dan kelola piutang dalam satu aplikasi.',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.78),
+                                  fontSize: 15,
+                                  height: 1.45,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                            if (state.versionInfo != null &&
+                                state.versionInfo!.isNotEmpty) ...[
+                              const SizedBox(height: 18),
+                              Text(
+                                'Server ${state.versionInfo}',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.45),
+                                  fontSize: 12,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                            ],
+                            const Spacer(flex: 2),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 7,
+                  child: FadeTransition(
+                    opacity: _listFade,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(28),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 22, 24, 8),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 28,
+                                  height: 3,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accent,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'Pilih perusahaan',
+                                  style: TextStyle(
+                                    color: AppColors.ink,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: state.businesses.isEmpty
+                                ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(28),
+                                      child: Text(
+                                        state.bootstrapError ??
+                                            'Daftar perusahaan belum tersedia. Periksa koneksi lalu buka ulang aplikasi.',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: AppColors.ink.withValues(
+                                            alpha: 0.55,
+                                          ),
+                                          height: 1.45,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : ListView.separated(
+                                    padding: EdgeInsets.fromLTRB(
+                                      20,
+                                      8,
+                                      20,
+                                      20 + bottomInset,
+                                    ),
+                                    itemCount: state.businesses.length,
+                                    separatorBuilder: (_, _) =>
+                                        const SizedBox(height: 10),
+                                    itemBuilder: (context, index) {
+                                      final business = state.businesses[index];
+                                      final company =
+                                          AppState.companyFromBusiness(
+                                        business,
+                                      );
+                                      return _CompanyPickTile(
+                                        company: company,
+                                        index: index,
+                                        animation: _motion,
+                                        onTap: () => _select(company),
+                                      );
+                                    },
+                                  ),
+                          ),
+                          if (state.bootstrapError != null &&
+                              state.businesses.isNotEmpty)
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                20,
+                                0,
+                                20,
+                                12 + bottomInset,
+                              ),
+                              child: Text(
+                                state.bootstrapError!,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.orange.shade800,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SplashBackdrop extends StatelessWidget {
+  const _SplashBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF072A4A),
+            AppColors.primary,
+            Color(0xFF0A6B6A),
+          ],
+          stops: [0, 0.55, 1],
+        ),
+      ),
+      child: CustomPaint(painter: _SplashMeshPainter()),
+    );
+  }
+}
+
+class _SplashMeshPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.045)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    const step = 36.0;
+    for (var x = -size.height; x < size.width + size.height; x += step) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x + size.height * 0.55, size.height),
+        paint,
+      );
+    }
+    final glow = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          AppColors.accent.withValues(alpha: 0.18),
+          Colors.transparent,
+        ],
+      ).createShader(
+        Rect.fromCircle(
+          center: Offset(size.width * 0.85, size.height * 0.12),
+          radius: size.width * 0.55,
+        ),
+      );
+    canvas.drawRect(Offset.zero & size, glow);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _CompanyPickTile extends StatelessWidget {
+  const _CompanyPickTile({
+    required this.company,
+    required this.index,
+    required this.animation,
+    required this.onTap,
+  });
+
+  final Company company;
+  final int index;
+  final Animation<double> animation;
+  final VoidCallback onTap;
+
+  String get _monogram {
+    final raw = company.shortName.trim();
+    if (raw.isEmpty) return '?';
+    final compact = raw.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
+    if (compact.length <= 3) return compact.toUpperCase();
+    return compact.substring(0, 3).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final start = (0.35 + index * 0.12).clamp(0.0, 0.85);
+    final end = (start + 0.35).clamp(0.0, 1.0);
+    final itemAnim = CurvedAnimation(
+      parent: animation,
+      curve: Interval(start, end, curve: Curves.easeOutCubic),
+    );
+    final subtitle = company.tagline.isNotEmpty
+        ? company.tagline
+        : company.businessCode;
+
+    return FadeTransition(
+      opacity: itemAnim,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.12),
+          end: Offset.zero,
+        ).animate(itemAnim),
+        child: Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: Ink(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.ink.withValues(alpha: 0.06),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.14),
+                            AppColors.secondary.withValues(alpha: 0.18),
+                          ],
+                        ),
+                      ),
+                      child: Text(
+                        _monogram,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            company.name,
+                            style: const TextStyle(
+                              color: AppColors.ink,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15.5,
+                              height: 1.25,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppColors.ink.withValues(alpha: 0.5),
+                              fontSize: 12.5,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 20,
+                      color: AppColors.ink.withValues(alpha: 0.28),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

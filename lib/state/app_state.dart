@@ -15,7 +15,7 @@ class AppState extends ChangeNotifier {
   final AppDatabase db;
 
   bool initialized = false;
-  Company company = Company.jmi;
+  Company company = Company.empty;
   String businessName = '';
   UserSession? session;
   int cartCount = 0;
@@ -24,6 +24,15 @@ class AppState extends ChangeNotifier {
   String? bootstrapError;
 
   bool get isLoggedIn => session != null;
+
+  static Company companyFromBusiness(BusinessServer b) => Company(
+    businessCode: b.businessCode,
+    name: b.businessName,
+    shortName: b.shortName.isEmpty ? b.businessCode : b.shortName,
+    imageFolder: b.imageFolder,
+    imageHost: b.imageHost.isEmpty ? b.host : b.imageHost,
+    tagline: b.tagline,
+  );
 
   Future<void> bootstrap() async {
     try {
@@ -36,6 +45,18 @@ class AppState extends ChangeNotifier {
       } catch (_) {}
       try {
         businesses = await repository.getBusinesses();
+        if (company.isEmpty && businesses.isNotEmpty) {
+          company = companyFromBusiness(businesses.first);
+          businessName = businesses.first.businessName;
+        } else if (!company.isEmpty && businesses.isNotEmpty) {
+          final match = businesses.where(
+            (b) => b.businessCode == company.businessCode,
+          );
+          if (match.isNotEmpty) {
+            company = companyFromBusiness(match.first);
+            businessName = match.first.businessName;
+          }
+        }
       } catch (e) {
         bootstrapError = e is ApiException ? e.message : null;
       }

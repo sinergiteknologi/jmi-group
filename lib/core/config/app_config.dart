@@ -17,38 +17,34 @@ class Company {
   final String imageHost;
   final String tagline;
 
-  static const jmi = Company(
-    businessCode: 'VenusERP10',
-    name: 'PT Jaya Makmur Indonesia',
-    shortName: 'JMI',
-    imageFolder: 'JMI_Images',
-    imageHost: 'production2.sinergiteknologi.co.id',
-    tagline: 'Distribusi & perdagangan umum',
-  );
-  static const mcc = Company(
-    businessCode: 'VenusERP21',
-    name: 'PT Mega Cahaya Cilacap',
-    shortName: 'MCC',
-    imageFolder: 'MCC_Images',
-    imageHost: 'production2.sinergiteknologi.co.id',
-    tagline: 'Distribusi wilayah Cilacap',
-  );
-  static const mmi = Company(
-    businessCode: 'VenusERP25',
-    name: 'PT Mainan Mandiri Indonesia',
-    shortName: 'MMI',
-    imageFolder: 'MMI_Images',
-    imageHost: 'production3.sinergiteknologi.co.id',
-    tagline: 'Mainan & produk anak',
+  static const empty = Company(
+    businessCode: '',
+    name: '',
+    shortName: '',
+    imageFolder: '',
+    imageHost: '',
+    tagline: '',
   );
 
-  static const all = [jmi, mcc, mmi];
+  bool get isEmpty => businessCode.isEmpty;
 
-  static Company byCode(String? code) =>
-      all.firstWhere((c) => c.businessCode == code, orElse: () => jmi);
+  Map<String, String> toJson() => {
+    'businessCode': businessCode,
+    'name': name,
+    'shortName': shortName,
+    'imageFolder': imageFolder,
+    'imageHost': imageHost,
+    'tagline': tagline,
+  };
 
-  static Company byShortName(String? value) =>
-      all.firstWhere((c) => c.shortName == value, orElse: () => jmi);
+  factory Company.fromJson(Map<String, String> json) => Company(
+    businessCode: json['businessCode'] ?? '',
+    name: json['name'] ?? '',
+    shortName: json['shortName'] ?? '',
+    imageFolder: json['imageFolder'] ?? '',
+    imageHost: json['imageHost'] ?? '',
+    tagline: json['tagline'] ?? '',
+  );
 }
 
 abstract final class AppConfig {
@@ -57,6 +53,7 @@ abstract final class AppConfig {
   static const servicePath =
       '/VenusERPJMIGroupClientMServices/mobileservices.asmx';
   static const soapNamespace = 'http://VenusERPJMIGroupClientMServices.org/';
+
   /// Optional CORS proxy prefix for web builds, e.g.
   /// `--dart-define=CORS_PROXY=http://localhost:8898/`.
   /// The target URL is appended verbatim: `<proxy><full service URL>`.
@@ -96,7 +93,8 @@ abstract final class AppConfig {
     final path = name.startsWith('http://') || name.startsWith('https://')
         ? Uri.parse(name).path
         : '/VenusERPJMIGroupClientMServices/${company.imageFolder}/$name';
-    if (kIsWeb) return proxiedUrl(company.imageHost, path);
-    return 'http://${company.imageHost}$path';
+    final host = company.imageHost.isEmpty ? defaultHost : company.imageHost;
+    if (kIsWeb) return proxiedUrl(host, path);
+    return 'http://$host$path';
   }
 }

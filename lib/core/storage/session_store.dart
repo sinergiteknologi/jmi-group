@@ -13,6 +13,7 @@ class SessionStore {
   final FlutterSecureStorage _secure;
 
   static const _kCompany = 'company_code';
+  static const _kCompanyJson = 'company_json';
   static const _kHost = 'app_server';
   static const _kBusinessName = 'app_business_name';
   static const _kSession = 'user_session';
@@ -30,13 +31,24 @@ class SessionStore {
   }) async {
     final prefs = await _prefs;
     await prefs.setString(_kCompany, company.businessCode);
+    await prefs.setString(_kCompanyJson, jsonEncode(company.toJson()));
     await prefs.setString(_kHost, host);
     await prefs.setString(_kBusinessName, businessName);
   }
 
   Future<Company> company() async {
     final prefs = await _prefs;
-    return Company.byCode(prefs.getString(_kCompany));
+    final raw = prefs.getString(_kCompanyJson);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = (jsonDecode(raw) as Map).map(
+          (k, v) => MapEntry(k.toString(), v?.toString() ?? ''),
+        );
+        final company = Company.fromJson(decoded);
+        if (!company.isEmpty) return company;
+      } catch (_) {}
+    }
+    return Company.empty;
   }
 
   Future<String> host() async {

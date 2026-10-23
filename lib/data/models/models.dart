@@ -20,21 +20,41 @@ class BusinessServer {
     required this.businessCode,
     required this.businessName,
     required this.host,
+    this.shortName = '',
+    this.imageFolder = '',
+    this.imageHost = '',
+    this.tagline = '',
+    this.dbHost = '',
   });
   final String businessCode;
   final String businessName;
   final String host;
+  final String shortName;
+  final String imageFolder;
+  final String imageHost;
+  final String tagline;
+  final String dbHost;
 
   static List<BusinessServer> fromPref(Map<String, String> r) {
     final codes = splitPref(r['Pref1']);
     final names = splitPref(r['Pref2']);
     final hosts = splitPref(r['Pref3']);
+    final shorts = splitPref(r['Pref4']);
+    final folders = splitPref(r['Pref5']);
+    final imageHosts = splitPref(r['Pref6']);
+    final taglines = splitPref(r['Pref7']);
+    final dbHosts = splitPref(r['Pref8']);
     return [
       for (var i = 0; i < codes.length; i++)
         BusinessServer(
           businessCode: codes[i],
           businessName: at(names, i),
           host: at(hosts, i),
+          shortName: at(shorts, i).isEmpty ? codes[i] : at(shorts, i),
+          imageFolder: at(folders, i),
+          imageHost: at(imageHosts, i).isEmpty ? at(hosts, i) : at(imageHosts, i),
+          tagline: at(taglines, i),
+          dbHost: at(dbHosts, i),
         ),
     ];
   }
