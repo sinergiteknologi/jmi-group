@@ -16,6 +16,8 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   List<CategoryItem> _categories = const [];
+  final _categorySearch = TextEditingController();
+  final Set<String> _expandedGroups = {};
   bool _inStock = false;
   bool _soldOut = false;
   bool _comingSoon = false;
@@ -26,6 +28,37 @@ class _SettingsPageState extends State<SettingsPage> {
     super.initState();
     _load();
   }
+
+  @override
+  void dispose() {
+    _categorySearch.dispose();
+    super.dispose();
+  }
+
+  List<MapEntry<String, List<CategoryItem>>> get _groupedCategories {
+    final query = _categorySearch.text.trim().toLowerCase();
+    final filtered = query.isEmpty
+        ? _categories
+        : _categories
+              .where(
+                (c) =>
+                    c.name.toLowerCase().contains(query) ||
+                    c.code.toLowerCase().contains(query),
+              )
+              .toList();
+    final map = <String, List<CategoryItem>>{};
+    for (final item in filtered) {
+      map.putIfAbsent(item.name, () => []).add(item);
+    }
+    final entries = map.entries.toList()
+      ..sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
+    for (final entry in entries) {
+      entry.value.sort((a, b) => a.code.compareTo(b.code));
+    }
+    return entries;
+  }
+
+  int get _favoriteCount => _categories.where((c) => c.isFavorite).length;
 
   Future<void> _load() async {
     final state = context.read<AppState>();
@@ -113,31 +146,103 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const SectionTitle(title: 'Kategori Favorit'),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: SectionTitle(title: 'Kategori Favorit'),
+                    ),
+                    if (_favoriteCount > 0)
+                      TextButton(
+                        onPressed: _clearFavorites,
+                        child: Text('Hapus ($_favoriteCount)'),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 4),
                 Text(
                   'Hanya produk dari kategori favorit yang tampil di katalog. Kosongkan semua untuk menampilkan semua kategori.',
-                  style: TextStyle(color: Colors.grey.shade600),
+                  style: TextStyle(color: Colors.grey.shade600, height: 1.35),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 if (_categories.isEmpty)
                   const Card(
                     child: ListTile(title: Text('Kategori belum tersedia')),
                   )
                 else
                   Card(
+                    clipBehavior: Clip.antiAlias,
                     child: Column(
-                      children: _categories
-                          .map(
-                            (category) => CheckboxListTile(
-                              title: Text(category.name),
-                              subtitle: Text(category.code),
-                              value: category.isFavorite,
-                              onChanged: (v) =>
-                                  _toggleCategory(category, v ?? false),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                          child: TextField(
+                            controller: _categorySearch,
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              hintText: 'Cari nama atau kode…',
+                              prefixIcon: const Icon(Icons.search, size: 20),
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              suffixIcon: _categorySearch.text.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      onPressed: () {
+                                        _categorySearch.clear();
+                                        setState(() {});
+                                      },
+                                      icon: const Icon(Icons.close, size: 18),
+                                    ),
                             ),
-                          )
-                          .toList(),
+                          ),
+                        ),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 320),
+                          child: _groupedCategories.isEmpty
+                              ? const Padding(
+                                  padding: EdgeInsets.all(20),
+                                  child: Text(
+                                    'Tidak ada kategori yang cocok.',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              : ListView.separated(
+                                  shrinkWrap: true,
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  itemCount: _groupedCategories.length,
+                                  separatorBuilder: (_, _) => Divider(
+                                    height: 1,
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                  ),
+                                  itemBuilder: (context, index) {
+                                    final group = _groupedCategories[index];
+                                    return _CategoryGroupTile(
+                                      name: group.key,
+                                      items: group.value,
+                                      expanded: _expandedGroups.contains(
+                                        group.key,
+                                      ),
+                                      onToggleExpanded: () {
+                                        setState(() {
+                                          if (_expandedGroups.contains(
+                                            group.key,
+                                          )) {
+                                            _expandedGroups.remove(group.key);
+                                          } else {
+                                            _expandedGroups.add(group.key);
+                                          }
+                                        });
+                                      },
+                                      onToggleGroup: (value) =>
+                                          _toggleGroup(group.value, value),
+                                      onToggleItem: _toggleCategory,
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
                     ),
                   ),
                 const SizedBox(height: 20),
@@ -220,6 +325,28 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
+  Future<void> _toggleGroup(List<CategoryItem> items, bool value) async {
+    final state = context.read<AppState>();
+    for (final item in items) {
+      if (item.isFavorite == value) continue;
+      await state.db.setCategoryFavorite(item.code, value);
+    }
+    final codes = items.map((e) => e.code).toSet();
+    setState(() {
+      _categories = _categories
+          .map(
+            (c) => codes.contains(c.code) ? c.copyWith(isFavorite: value) : c,
+          )
+          .toList();
+    });
+  }
+
+  Future<void> _clearFavorites() async {
+    final favorites = _categories.where((c) => c.isFavorite).toList();
+    if (favorites.isEmpty) return;
+    await _toggleGroup(favorites, false);
+  }
+
   Future<void> _logout() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -247,6 +374,115 @@ class _SettingsPageState extends State<SettingsPage> {
       context,
       MaterialPageRoute(builder: (_) => const SplashPage()),
       (_) => false,
+    );
+  }
+}
+
+class _CategoryGroupTile extends StatelessWidget {
+  const _CategoryGroupTile({
+    required this.name,
+    required this.items,
+    required this.expanded,
+    required this.onToggleExpanded,
+    required this.onToggleGroup,
+    required this.onToggleItem,
+  });
+
+  final String name;
+  final List<CategoryItem> items;
+  final bool expanded;
+  final VoidCallback onToggleExpanded;
+  final ValueChanged<bool> onToggleGroup;
+  final void Function(CategoryItem category, bool value) onToggleItem;
+
+  bool get _allSelected => items.every((e) => e.isFavorite);
+  bool get _someSelected => items.any((e) => e.isFavorite);
+  int get _selectedCount => items.where((e) => e.isFavorite).length;
+
+  @override
+  Widget build(BuildContext context) {
+    final single = items.length == 1;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          onTap: single
+              ? () => onToggleItem(items.first, !items.first.isFavorite)
+              : onToggleExpanded,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              children: [
+                Checkbox(
+                  tristate: !single,
+                  value: single
+                      ? items.first.isFavorite
+                      : _allSelected
+                      ? true
+                      : _someSelected
+                      ? null
+                      : false,
+                  onChanged: (v) => onToggleGroup(v ?? false),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        single
+                            ? items.first.code
+                            : _selectedCount > 0
+                            ? '$_selectedCount/${items.length} dipilih'
+                            : '${items.length} kode',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!single)
+                  Icon(
+                    expanded
+                        ? Icons.expand_less_rounded
+                        : Icons.expand_more_rounded,
+                    color: Colors.grey.shade600,
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (!single && expanded)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 12, 10),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final item in items)
+                  FilterChip(
+                    label: Text(item.code, style: const TextStyle(fontSize: 12)),
+                    selected: item.isFavorite,
+                    showCheckmark: false,
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    onSelected: (v) => onToggleItem(item, v),
+                  ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
