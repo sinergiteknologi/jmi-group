@@ -87,14 +87,59 @@ abstract final class AppConfig {
   static String proxiedUrl(String host, String path) =>
       '$webProxyPath?host=${resolvedHost(host)}&path=${Uri.encodeComponent(path)}';
 
+  static String _clean(String value) {
+    final v = value.trim();
+    if (v.isEmpty || v == '-') return '';
+    return v;
+  }
+
+  /// Folder gambar: Pref5 / shortName_Images / Images.
+  static String imageFolderOf(Company company) {
+    final folder = _clean(company.imageFolder);
+    if (folder.isNotEmpty) return folder;
+    final short = _clean(company.shortName);
+    if (short.isNotEmpty) return '${short}_Images';
+    return 'Images';
+  }
+
+  static String imageHostOf(Company company) {
+    final host = _clean(company.imageHost);
+    return host.isEmpty ? defaultHost : host;
+  }
+
   static String imageUrl(Company company, String fileName) {
-    final name = fileName.trim();
-    if (name.isEmpty || name == '-') return '';
-    final path = name.startsWith('http://') || name.startsWith('https://')
-        ? Uri.parse(name).path
-        : '/VenusERPJMIGroupClientMServices/${company.imageFolder}/$name';
-    final host = company.imageHost.isEmpty ? defaultHost : company.imageHost;
-    if (kIsWeb) return proxiedUrl(host, path);
-    return 'http://$host$path';
+    final name = _clean(fileName);
+    if (name.isEmpty) {
+      debugPrint('[IMG] imageUrl empty fileName="$fileName"');
+      return '';
+    }
+    final String path;
+    if (name.startsWith('http://') || name.startsWith('https://')) {
+      path = Uri.parse(name).path;
+    } else {
+      final folder = imageFolderOf(company);
+      final encoded = name.split('/').map(Uri.encodeComponent).join('/');
+      path = '/VenusERPJMIGroupClientMServices/$folder/$encoded';
+    }
+    final host = imageHostOf(company);
+    final direct = 'http://$host$path';
+    // Web di HTTPS (Vercel) wajib proxy. Local flutter web (http://localhost)
+    // tidak punya /api/proxy — pakai host gambar langsung.
+    final url = kIsWeb && _needsImageProxy ? proxiedUrl(host, path) : direct;
+    debugPrint(
+      '[IMG] build fileName=$name host=$host folder=${imageFolderOf(company)} '
+      'shortName=${company.shortName} biz=${company.businessCode} '
+      'proxy=$_needsImageProxy url=$url',
+    );
+    return url;
+  }
+
+  static bool get _needsImageProxy {
+    if (!kIsWeb) return false;
+    final base = Uri.base;
+    if (base.scheme != 'https') return false;
+    final host = base.host.toLowerCase();
+    if (host == 'localhost' || host == '127.0.0.1') return false;
+    return true;
   }
 }

@@ -25,14 +25,27 @@ class AppState extends ChangeNotifier {
 
   bool get isLoggedIn => session != null;
 
-  static Company companyFromBusiness(BusinessServer b) => Company(
-    businessCode: b.businessCode,
-    name: b.businessName,
-    shortName: b.shortName.isEmpty ? b.businessCode : b.shortName,
-    imageFolder: b.imageFolder,
-    imageHost: b.imageHost.isEmpty ? b.host : b.imageHost,
-    tagline: b.tagline,
-  );
+  static String _clean(String value) {
+    final v = value.trim();
+    if (v.isEmpty || v == '-') return '';
+    return v;
+  }
+
+  static Company companyFromBusiness(BusinessServer b) {
+    final short = _clean(b.shortName).isEmpty
+        ? b.businessCode
+        : _clean(b.shortName);
+    final folder = _clean(b.imageFolder);
+    final host = _clean(b.imageHost);
+    return Company(
+      businessCode: b.businessCode,
+      name: b.businessName,
+      shortName: short,
+      imageFolder: folder.isEmpty ? '${short}_Images' : folder,
+      imageHost: host.isEmpty ? _clean(b.host) : host,
+      tagline: _clean(b.tagline),
+    );
+  }
 
   Future<void> bootstrap() async {
     try {

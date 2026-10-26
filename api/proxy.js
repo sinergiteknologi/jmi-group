@@ -28,10 +28,17 @@ module.exports = async (req, res) => {
     { host, port: 80, path, method: req.method, headers, timeout: TIMEOUT_MS },
     (up) => {
       res.statusCode = up.statusCode || 502;
-      if (up.headers['content-type']) {
-        res.setHeader('Content-Type', up.headers['content-type']);
+      let contentType = up.headers['content-type'];
+      if (!contentType) {
+        if (/\.bmp$/i.test(path)) contentType = 'image/bmp';
+        else if (/\.jpe?g$/i.test(path)) contentType = 'image/jpeg';
+        else if (/\.png$/i.test(path)) contentType = 'image/png';
+        else if (/\.gif$/i.test(path)) contentType = 'image/gif';
+        else if (/\.webp$/i.test(path)) contentType = 'image/webp';
       }
-      res.setHeader('Cache-Control', 'no-store');
+      if (contentType) res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Access-Control-Allow-Origin', '*');
       up.pipe(res);
     },
   );

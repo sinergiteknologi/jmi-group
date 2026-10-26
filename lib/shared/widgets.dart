@@ -1,8 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../core/config/app_config.dart';
 import '../core/theme/app_theme.dart';
+import 'product_image_loader.dart';
 
 void showMessage(BuildContext context, String message) {
   ScaffoldMessenger.of(context)
@@ -155,7 +158,7 @@ class ErrorState extends StatelessWidget {
   }
 }
 
-class ProductImage extends StatelessWidget {
+class ProductImage extends StatefulWidget {
   const ProductImage({
     super.key,
     required this.company,
@@ -167,14 +170,100 @@ class ProductImage extends StatelessWidget {
   final BoxFit fit;
 
   @override
+  State<ProductImage> createState() => _ProductImageState();
+}
+
+class _ProductImageState extends State<ProductImage> {
+  late Future<Uint8List?> _bytes;
+
+  @override
+  void initState() {
+    super.initState();
+    _bytes = _startLoad();
+  }
+
+  @override
+  void didUpdateWidget(covariant ProductImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.company.imageHost != widget.company.imageHost ||
+        oldWidget.company.imageFolder != widget.company.imageFolder ||
+        oldWidget.fileName != widget.fileName) {
+      setState(() => _bytes = _startLoad());
+    }
+  }
+
+  Future<Uint8List?> _startLoad() {
+    debugPrint(
+      '[IMG] ProductImage start fileName=${widget.fileName} '
+      'imageHost=${widget.company.imageHost} imageFolder=${widget.company.imageFolder}',
+    );
+    final url = AppConfig.imageUrl(widget.company, widget.fileName);
+    if (url.isEmpty) {
+      debugPrint('[IMG] ProductImage skip empty url fileName=${widget.fileName}');
+      return Future.value(null);
+    }
+    // Web: tampil via <img> (hindari CORS + BMP decode). Loader hanya mobile.
+    if (kIsWeb) return Future.value(null);
+    return ProductImageLoader.load(url);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final url = AppConfig.imageUrl(company, fileName);
+    final url = AppConfig.imageUrl(widget.company, widget.fileName);
     if (url.isEmpty) return const _ImagePlaceholder();
-    return CachedNetworkImage(
-      imageUrl: url,
-      fit: fit,
-      placeholder: (_, _) => const _ImagePlaceholder(loading: true),
-      errorWidget: (_, _, _) => const _ImagePlaceholder(),
+
+    // Local/production web: browser <img> bisa render .bmp cross-origin.
+    if (kIsWeb) {
+      return Image.network(
+        url,
+        fit: widget.fit,
+        width: double.infinity,
+        height: double.infinity,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.medium,
+        webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return const _ImagePlaceholder(loading: true);
+        },
+        errorBuilder: (_, error, _) {
+          debugPrint(
+            '[IMG] ProductImage web error fileName=${widget.fileName} url=$url err=$error',
+          );
+          return const _ImagePlaceholder();
+        },
+      );
+    }
+
+    return FutureBuilder<Uint8List?>(
+      future: _bytes,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const _ImagePlaceholder(loading: true);
+        }
+        final data = snapshot.data;
+        if (data == null || data.isEmpty) {
+          debugPrint(
+            '[IMG] ProductImage show placeholder fileName=${widget.fileName} '
+            'error=${snapshot.error}',
+          );
+          return const _ImagePlaceholder();
+        }
+        return Image.memory(
+          data,
+          fit: widget.fit,
+          width: double.infinity,
+          height: double.infinity,
+          gaplessPlayback: true,
+          filterQuality: FilterQuality.medium,
+          errorBuilder: (_, error, _) {
+            debugPrint(
+              '[IMG] ProductImage Image.memory error fileName=${widget.fileName} err=$error',
+            );
+            return const _ImagePlaceholder();
+          },
+        );
+      },
     );
   }
 }
@@ -189,7 +278,14 @@ class _ImagePlaceholder extends StatelessWidget {
       color: Colors.grey.shade100,
       alignment: Alignment.center,
       child: loading
-          ? const CircularProgressIndicator(strokeWidth: 2)
+          ? const SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: AppColors.primary,
+              ),
+            )
           : Icon(
               Icons.inventory_2_outlined,
               size: 42,
