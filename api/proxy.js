@@ -27,19 +27,42 @@ module.exports = async (req, res) => {
   const upstream = http.request(
     { host, port: 80, path, method: req.method, headers, timeout: TIMEOUT_MS },
     (up) => {
-      res.statusCode = up.statusCode || 502;
-      let contentType = up.headers['content-type'];
-      if (!contentType) {
-        if (/\.bmp$/i.test(path)) contentType = 'image/bmp';
-        else if (/\.jpe?g$/i.test(path)) contentType = 'image/jpeg';
-        else if (/\.png$/i.test(path)) contentType = 'image/png';
-        else if (/\.gif$/i.test(path)) contentType = 'image/gif';
-        else if (/\.webp$/i.test(path)) contentType = 'image/webp';
-      }
-      if (contentType) res.setHeader('Content-Type', contentType);
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      up.pipe(res);
+      const chunks = [];
+      up.on('data', (c) => chunks.push(c));
+      up.on('end', () => {
+        const buf = Buffer.concat(chunks);
+        const upstreamType = (up.headers['content-type'] || '').toLowerCase();
+        const head = buf.slice(0, 64).toString('utf8').trimStart().toLowerCase();
+        const isHtml =
+          upstreamType.includes('text/html') ||
+          head.startsWith('<!doctype') ||
+          head.startsWith('<html');
+        if (isHtml || (up.statusCode || 500) >= 400) {
+          res.statusCode = up.statusCode && up.statusCode >= 400 ? up.statusCode : 404;
+          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.end('Image not found');
+          return;
+        }
+
+        let contentType = up.headers['content-type'];
+        if (!contentType || contentType.toLowerCase().includes('octet-stream')) {
+          if (buf[0] === 0xff && buf[1] === 0xd8) contentType = 'image/jpeg';
+          else if (buf[0] === 0x89 && buf[1] === 0x50) contentType = 'image/png';
+          else if (buf[0] === 0x42 && buf[1] === 0x4d) contentType = 'image/bmp';
+          else if (/\.bmp$/i.test(path)) contentType = 'image/bmp';
+          else if (/\.jpe?g$/i.test(path)) contentType = 'image/jpeg';
+          else if (/\.png$/i.test(path)) contentType = 'image/png';
+          else if (/\.gif$/i.test(path)) contentType = 'image/gif';
+          else if (/\.webp$/i.test(path)) contentType = 'image/webp';
+        }
+
+        res.statusCode = up.statusCode || 200;
+        if (contentType) res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.end(buf);
+      });
     },
   );
   upstream.on('timeout', () => upstream.destroy(new Error('Upstream timeout')));

@@ -202,8 +202,6 @@ class _ProductImageState extends State<ProductImage> {
       debugPrint('[IMG] ProductImage skip empty url fileName=${widget.fileName}');
       return Future.value(null);
     }
-    // Web: tampil via <img> (hindari CORS + BMP decode). Loader hanya mobile.
-    if (kIsWeb) return Future.value(null);
     return ProductImageLoader.load(url);
   }
 
@@ -211,29 +209,6 @@ class _ProductImageState extends State<ProductImage> {
   Widget build(BuildContext context) {
     final url = AppConfig.imageUrl(widget.company, widget.fileName);
     if (url.isEmpty) return const _ImagePlaceholder();
-
-    // Local/production web: browser <img> bisa render .bmp cross-origin.
-    if (kIsWeb) {
-      return Image.network(
-        url,
-        fit: widget.fit,
-        width: double.infinity,
-        height: double.infinity,
-        gaplessPlayback: true,
-        filterQuality: FilterQuality.medium,
-        webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) return child;
-          return const _ImagePlaceholder(loading: true);
-        },
-        errorBuilder: (_, error, _) {
-          debugPrint(
-            '[IMG] ProductImage web error fileName=${widget.fileName} url=$url err=$error',
-          );
-          return const _ImagePlaceholder();
-        },
-      );
-    }
 
     return FutureBuilder<Uint8List?>(
       future: _bytes,

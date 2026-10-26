@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
@@ -634,7 +633,7 @@ class _ImageZoomPageState extends State<ImageZoomPage> {
   void initState() {
     super.initState();
     _url = AppConfig.imageUrl(widget.company, widget.fileName);
-    _bytes = (!kIsWeb && _url.isNotEmpty)
+    _bytes = _url.isNotEmpty
         ? ProductImageLoader.load(_url)
         : Future.value(null);
   }
@@ -650,21 +649,6 @@ class _ImageZoomPageState extends State<ImageZoomPage> {
       body: _url.isEmpty
           ? const Center(
               child: Icon(Icons.broken_image_outlined, color: Colors.white54, size: 48),
-            )
-          : kIsWeb
-          ? PhotoView(
-              imageProvider: NetworkImage(_url),
-              backgroundDecoration: const BoxDecoration(color: Colors.black),
-              loadingBuilder: (context, event) => const Center(
-                child: SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
             )
           : FutureBuilder<Uint8List?>(
               future: _bytes,

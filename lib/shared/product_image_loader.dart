@@ -52,7 +52,9 @@ class ProductImageLoader {
 
   static Future<Uint8List?> _fetchAndConvert(String url) async {
     final candidates = <Uri>[absoluteUri(url)];
-    final direct = _directFromProxy(url);
+    // Direct http://host hanya aman di local (non-HTTPS). Di Vercel mixed content diblokir.
+    final allowDirect = !kIsWeb || Uri.base.scheme != 'https';
+    final direct = allowDirect ? _directFromProxy(url) : null;
     if (direct != null) candidates.add(direct);
 
     final primaryPath = candidates.first.path.toLowerCase();

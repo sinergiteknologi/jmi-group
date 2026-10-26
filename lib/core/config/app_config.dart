@@ -93,17 +93,58 @@ abstract final class AppConfig {
     return v;
   }
 
+  static const _imageByBiz = <String, ({String folder, String host, String short})>{
+    'venuserp10': (
+      folder: 'JMI_Images',
+      host: 'production2.sinergiteknologi.co.id',
+      short: 'JMI',
+    ),
+    'venuserp21': (
+      folder: 'MCC_Images',
+      host: 'production2.sinergiteknologi.co.id',
+      short: 'MCC',
+    ),
+    'venuserp25': (
+      folder: 'MMI_Images',
+      host: 'production3.sinergiteknologi.co.id',
+      short: 'MMI',
+    ),
+  };
+
+  static bool _isDbNameFolder(String folder, String businessCode) {
+    if (folder.isEmpty) return true;
+    if (RegExp(r'^VenusERP\d+_Images$', caseSensitive: false).hasMatch(folder)) {
+      return true;
+    }
+    final code = businessCode.toLowerCase();
+    return code.isNotEmpty && folder.toLowerCase() == '${code}_images';
+  }
+
   /// Folder gambar: Pref5 / shortName_Images / Images.
   static String imageFolderOf(Company company) {
     final folder = _clean(company.imageFolder);
+    final def = _imageByBiz[_clean(company.businessCode).toLowerCase()];
+    if (def != null && _isDbNameFolder(folder, company.businessCode)) {
+      return def.folder;
+    }
     if (folder.isNotEmpty) return folder;
     final short = _clean(company.shortName);
+    if (short.isNotEmpty && short.toLowerCase() != company.businessCode.toLowerCase()) {
+      return '${short}_Images';
+    }
+    if (def != null) return def.folder;
     if (short.isNotEmpty) return '${short}_Images';
     return 'Images';
   }
 
   static String imageHostOf(Company company) {
     final host = _clean(company.imageHost);
+    final def = _imageByBiz[_clean(company.businessCode).toLowerCase()];
+    if (def != null &&
+        (host.isEmpty ||
+            host.toLowerCase() == 'production.sinergiteknologi.co.id')) {
+      return def.host;
+    }
     return host.isEmpty ? defaultHost : host;
   }
 
