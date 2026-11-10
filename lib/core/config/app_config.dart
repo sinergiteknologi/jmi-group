@@ -101,7 +101,7 @@ abstract final class AppConfig {
     ),
     'venuserp21': (
       folder: 'MCC_Images',
-      host: 'production2.sinergiteknologi.co.id',
+      host: 'production3.sinergiteknologi.co.id',
       short: 'MCC',
     ),
     'venuserp25': (
