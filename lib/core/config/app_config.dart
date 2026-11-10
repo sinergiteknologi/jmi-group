@@ -106,7 +106,7 @@ abstract final class AppConfig {
     ),
     'venuserp25': (
       folder: 'MMI_Images',
-      host: 'production3.sinergiteknologi.co.id',
+      host: 'production2.sinergiteknologi.co.id',
       short: 'MMI',
     ),
   };
