@@ -137,14 +137,11 @@ abstract final class AppConfig {
     return 'Images';
   }
 
+  /// Domain gambar hardcode per bisnis (abaikan ImageHost dari API/DB).
   static String imageHostOf(Company company) {
-    final host = _clean(company.imageHost);
     final def = _imageByBiz[_clean(company.businessCode).toLowerCase()];
-    if (def != null &&
-        (host.isEmpty ||
-            host.toLowerCase() == 'production.sinergiteknologi.co.id')) {
-      return def.host;
-    }
+    if (def != null) return def.host;
+    final host = _clean(company.imageHost);
     return host.isEmpty ? defaultHost : host;
   }
 
