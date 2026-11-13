@@ -358,8 +358,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Product get product => widget.product;
   int get _stock => _detail?.stock ?? product.stock;
   int get _maxQty {
+    if (_stock <= 0) return 0;
     final factor = uomFactor(product.descUom);
-    if (factor <= 0 || _stock <= 0) return 0;
+    // UOM1 baru bisa berisi qty konversi (mis. "QTY/SET = 143 PACK"),
+    // bukan factor order — kalau factor > stok, order 1:1 pakai stok.
+    if (factor <= 1 || factor > _stock) return _stock;
     return _stock ~/ factor;
   }
 

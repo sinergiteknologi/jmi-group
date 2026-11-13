@@ -224,7 +224,12 @@ class Product {
   bool get isComingSoon => stock < 0;
   bool get isSoldOut => stock == 0;
   bool get isAvailable => stock > 0;
-  int get maxQty => uomFactor(descUom) == 0 ? 0 : stock ~/ uomFactor(descUom);
+  int get maxQty {
+    if (stock <= 0) return 0;
+    final factor = uomFactor(descUom);
+    if (factor <= 1 || factor > stock) return stock;
+    return stock ~/ factor;
+  }
   double get effectivePrice => specialPrice > 0 ? specialPrice : price;
 
   List<String> get imageFiles => imageUrl
