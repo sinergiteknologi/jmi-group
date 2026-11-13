@@ -573,11 +573,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     (v == null || v.isEmpty) ? 'Wajib diisi' : null,
               ),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _loading ? null : _submit,
-                child: _loading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Simpan Password'),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _loading ? null : _submit,
+                  child: _loading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Simpan Password'),
+                ),
               ),
             ],
           ),

@@ -183,6 +183,8 @@ class _CartPageState extends State<CartPage> {
                   const Text('Total', style: TextStyle(color: Colors.grey)),
                   Text(
                     formatRupiah(_total),
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
@@ -191,6 +193,7 @@ class _CartPageState extends State<CartPage> {
                 ],
               ),
             ),
+            const SizedBox(width: 12),
             FilledButton(
               onPressed: _total > 0
                   ? () => Navigator.push(
@@ -522,19 +525,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: _submitting ? null : _submit,
-                  icon: _submitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.send_outlined),
-                  label: Text(_isEdit ? 'Simpan Perubahan' : 'Kirim Pesanan'),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _submitting ? null : _submit,
+                    icon: _submitting
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.send_outlined),
+                    label: Text(_isEdit ? 'Simpan Perubahan' : 'Kirim Pesanan'),
+                  ),
                 ),
               ],
             ),
