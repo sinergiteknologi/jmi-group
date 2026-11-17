@@ -615,7 +615,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       showMessage(context, 'Isi jumlah terlebih dahulu.');
       return;
     }
-    await context.read<AppState>().addToCart(product, _qty);
+    final item = product.toCart(
+      _qty,
+      stockForUom: product.stock > 0 ? product.stock : _stock,
+    );
+    await context.read<AppState>().addToCartItem(item);
     if (mounted) {
       showMessage(
         context,
@@ -629,11 +633,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       showMessage(context, 'Isi jumlah terlebih dahulu.');
       return;
     }
+    // Bawa qty SET dari detail + rumus PACK yang sama (mis. 2 SET ≈ 26 PACK).
+    final item = product.toCart(
+      _qty,
+      stockForUom: product.stock > 0 ? product.stock : _stock,
+    );
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => CheckoutPage(directItem: product.toCart(_qty)),
-      ),
+      MaterialPageRoute(builder: (_) => CheckoutPage(directItem: item)),
     );
   }
 }

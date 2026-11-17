@@ -437,8 +437,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Text(
-                        '${item.qty} × ${formatRupiah(item.price)} • ${item.uom}',
+                        item.packsPerUnit > 1
+                            ? '${item.qty} SET ≈ ${formatNumber(item.totalPacks)} PACK\n'
+                                '${item.uom} • ${formatRupiah(item.price)}/SET'
+                            : '${item.qty} × ${formatRupiah(item.price)} • ${item.uom}',
                       ),
+                      isThreeLine: item.packsPerUnit > 1,
                       trailing: Text(
                         formatRupiah(item.lineTotal),
                         style: const TextStyle(fontWeight: FontWeight.w800),

@@ -282,8 +282,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 const SizedBox(height: 16),
                 const SectionTitle(title: 'Item Pesanan'),
                 const SizedBox(height: 8),
-                ..._lines.map(
-                  (line) => Card(
+                ..._lines.map((line) {
+                  final pps = line.packsPerUnit;
+                  final subtitle = pps > 1 || line.packQty > 0
+                      ? '${line.code} • ${line.qty} SET ≈ ${formatNumber(line.totalPacks)} PACK\n'
+                          '${line.uom} • ${formatRupiah(line.price)}/SET'
+                      : '${line.code} • ${line.qty} × ${formatRupiah(line.price)}\n${line.uom}';
+                  return Card(
                     child: ListTile(
                       leading: SizedBox(
                         width: 48,
@@ -298,17 +303,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: Text(
-                        '${line.code} • ${line.qty} × ${formatRupiah(line.price)}\n${line.uom}',
-                      ),
+                      subtitle: Text(subtitle),
                       isThreeLine: true,
                       trailing: Text(
                         formatRupiah(line.lineTotal),
                         style: const TextStyle(fontWeight: FontWeight.w800),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                }),
                 const SizedBox(height: 12),
                 Row(
                   children: [

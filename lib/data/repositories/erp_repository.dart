@@ -202,7 +202,10 @@ class ErpRepository {
       'prmDelDate': deliveryDate,
       'prmNotes': notes,
       'prmProdCode': items.map((e) => "'${e.code}'").join(','),
-      'prmQTY2': items.map((e) => e.qty.toString()).join('|'),
+      // ERP Qty2 = PACK (PackingCode2). UI qty = SET → kirim SET × packsPerSet.
+      'prmQTY2': items
+          .map((e) => qtyToPack(e.qty, e.uom, e.stock).toString())
+          .join('|'),
       'prmPrice': items.map((e) => e.price.toStringAsFixed(0)).join('|'),
       'prmEONumber': eoNumber,
       'prmTOP': topCode,

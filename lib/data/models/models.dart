@@ -224,7 +224,7 @@ class Product {
   bool get isComingSoon => stock < 0;
   bool get isSoldOut => stock == 0;
   bool get isAvailable => stock > 0;
-  int get maxQty => maxOrderQty(stock, descUom);
+  int get maxQty => maxOrderQty(stock);
 
   /// 1 SET = N PACK (dari UOM1 + stok).
   double get packsPerUnit => packsPerSet(descUom, stock);
@@ -290,17 +290,22 @@ class Product {
     alias: r['Alias'].toString(),
   );
 
-  CartItem toCart(int qty) => CartItem(
-    code: code,
-    name: name,
-    price: effectivePrice,
-    description: description,
-    qty: qty,
-    imageUrl: imageFiles.firstOrNull ?? '',
-    uom: descUom,
-    stock: stock,
-    alias: alias,
-  );
+  /// [qty] = jumlah SET dari detail. [stockForUom] = stok list untuk rumus PACK/SET.
+  CartItem toCart(int qty, {int? stockForUom}) {
+    final s = (stockForUom != null && stockForUom > 0) ? stockForUom : stock;
+    return CartItem(
+      code: code,
+      name: name,
+      price: effectivePrice,
+      description: description,
+      qty: qty,
+      imageUrl: imageFiles.firstOrNull ?? '',
+      // Simpan konversi per SET, jangan total stok (143 PACK).
+      uom: normalizeSetUom(descUom, s),
+      stock: s,
+      alias: alias,
+    );
+  }
 }
 
 class ProductDetail {
@@ -380,17 +385,20 @@ class CartItem {
     'Alias': alias,
   };
 
-  factory CartItem.fromDb(Map<String, Object?> r) => CartItem(
-    code: r['Code'].toString(),
-    name: r['Name'].toString(),
-    price: parseDouble(r['Price'].toString()),
-    description: r['Desc'].toString(),
-    qty: parseInt(r['QTY'].toString()),
-    imageUrl: r['ImageURL'].toString(),
-    uom: r['UOM'].toString(),
-    stock: parseInt(r['Stock'].toString()),
-    alias: r['Alias'].toString(),
-  );
+  factory CartItem.fromDb(Map<String, Object?> r) {
+    final stock = parseInt(r['Stock'].toString());
+    return CartItem(
+      code: r['Code'].toString(),
+      name: r['Name'].toString(),
+      price: parseDouble(r['Price'].toString()),
+      description: r['Desc'].toString(),
+      qty: parseInt(r['QTY'].toString()),
+      imageUrl: r['ImageURL'].toString(),
+      uom: normalizeSetUom(r['UOM'].toString(), stock),
+      stock: stock,
+      alias: r['Alias'].toString(),
+    );
+  }
 }
 
 class CategoryItem {
@@ -493,7 +501,7 @@ class OrderLine {
     required this.description,
     required this.uom,
     required this.qty,
-    required this.stock,
+    required this.packQty,
   });
   final String imageUrl;
   final String code;
@@ -501,9 +509,17 @@ class OrderLine {
   final double price;
   final String description;
   final String uom;
+  /// Jumlah SET (Qty1 / akumulasi dari detail produk).
   final int qty;
-  final String stock;
+  /// Jumlah PACK (Qty2) untuk tampilan akumulasi.
+  final int packQty;
 
+  double get packsPerUnit => packsPerSet(uom, qty > 0 ? packQty : 0);
+
+  int get totalPacks =>
+      packQty > 0 ? packQty : (qty * packsPerUnit).round();
+
+  /// Harga per SET × qty SET.
   double get lineTotal => qty * price;
 
   static List<OrderLine> fromPref(Map<String, String> r) {
@@ -514,7 +530,7 @@ class OrderLine {
     final descs = splitPref(r['Pref5']);
     final uoms = splitPref(r['Pref6']);
     final qtys = splitPref(r['Pref7']);
-    final stocks = splitPref(r['Pref8']);
+    final packs = splitPref(r['Pref8']);
     return [
       for (var i = 0; i < codes.length; i++)
         OrderLine(
@@ -523,22 +539,25 @@ class OrderLine {
           name: at(names, i),
           price: parseDouble(at(prices, i)),
           description: at(descs, i),
-          uom: at(uoms, i),
+          uom: normalizeSetUom(at(uoms, i), parseInt(at(qtys, i))),
           qty: parseInt(at(qtys, i)),
-          stock: at(stocks, i),
+          packQty: parseInt(at(packs, i)),
         ),
     ];
   }
 
+  /// Qty sudah SET (selaras detail produk).
   CartItem toCart() => CartItem(
     code: code,
     name: name,
     price: price,
     description: description,
-    qty: qty,
+    qty: qty < 1 ? 1 : qty,
     imageUrl: imageUrl,
-    uom: uom,
-    stock: parseInt(stock),
+    uom: uom.startsWith('1 SET')
+        ? uom
+        : normalizeSetUom(uom, qty > 0 ? packQty : 0),
+    stock: qty,
     alias: '',
   );
 }

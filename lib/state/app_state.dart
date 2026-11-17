@@ -115,6 +115,11 @@ class AppState extends ChangeNotifier {
     await refreshCart();
   }
 
+  Future<void> addToCartItem(CartItem item) async {
+    await db.upsertCart(item);
+    await refreshCart();
+  }
+
   Future<void> logout() async {
     await store.clearAll();
     await db.clearAll();
