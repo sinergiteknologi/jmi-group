@@ -127,6 +127,14 @@ class _CartPageState extends State<CartPage> {
                                         color: Colors.blue,
                                       ),
                                     ),
+                                    if (item.packsPerUnit > 1)
+                                      Text(
+                                        '${item.qty} SET ≈ ${formatNumber(item.totalPacks)} PACK',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ),
@@ -141,6 +149,7 @@ class _CartPageState extends State<CartPage> {
                                   ),
                                   QtyStepper(
                                     qty: item.qty,
+                                    maxQty: maxOrderQty(item.stock, item.uom),
                                     onChanged: (qty) => _updateQty(item, qty),
                                   ),
                                 ],

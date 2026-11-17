@@ -224,12 +224,10 @@ class Product {
   bool get isComingSoon => stock < 0;
   bool get isSoldOut => stock == 0;
   bool get isAvailable => stock > 0;
-  int get maxQty {
-    if (stock <= 0) return 0;
-    final factor = uomFactor(descUom);
-    if (factor <= 1 || factor > stock) return stock;
-    return stock ~/ factor;
-  }
+  int get maxQty => maxOrderQty(stock, descUom);
+
+  /// 1 SET = N PACK (dari UOM1 + stok).
+  double get packsPerUnit => packsPerSet(descUom, stock);
   double get effectivePrice => specialPrice > 0 ? specialPrice : price;
 
   List<String> get imageFiles => imageUrl
@@ -351,7 +349,12 @@ class CartItem {
   final int stock;
   final String alias;
 
-  double get lineTotal => qty * uomFactor(uom) * price;
+  /// Harga per SET; qty = jumlah SET.
+  double get lineTotal => qty * price;
+
+  double get packsPerUnit => packsPerSet(uom, stock);
+
+  int get totalPacks => (qty * packsPerUnit).round();
 
   CartItem copyWith({int? qty}) => CartItem(
     code: code,
@@ -501,7 +504,7 @@ class OrderLine {
   final int qty;
   final String stock;
 
-  double get lineTotal => qty * uomFactor(uom) * price;
+  double get lineTotal => qty * price;
 
   static List<OrderLine> fromPref(Map<String, String> r) {
     final images = splitPref(r['Pref1']);
