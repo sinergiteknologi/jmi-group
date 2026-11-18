@@ -111,6 +111,24 @@ abstract final class AppConfig {
     ),
   };
 
+  /// Logo lokal untuk layar pilih bisnis.
+  static const _logoByKey = <String, String>{
+    'venuserp10': 'assets/jmscreen.png',
+    'jmi': 'assets/jmscreen.png',
+    'venuserp21': 'assets/mccscreen.png',
+    'mcc': 'assets/mccscreen.png',
+    'venuserp25': 'assets/mmiscreen.png',
+    'mmi': 'assets/mmiscreen.png',
+  };
+
+  static String? companyLogoAsset(Company company) {
+    final code = _clean(company.businessCode).toLowerCase();
+    final short = _clean(company.shortName).toLowerCase();
+    return _logoByKey[code] ??
+        _logoByKey[short] ??
+        _logoByKey[_imageByBiz[code]?.short.toLowerCase() ?? ''];
+  }
+
   static bool _isDbNameFolder(String folder, String businessCode) {
     if (folder.isEmpty) return true;
     if (RegExp(r'^VenusERP\d+_Images$', caseSensitive: false).hasMatch(folder)) {

@@ -381,31 +381,7 @@ class _CompanyPickTile extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
                 child: Row(
                   children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.primary.withValues(alpha: 0.14),
-                            AppColors.secondary.withValues(alpha: 0.18),
-                          ],
-                        ),
-                      ),
-                      child: Text(
-                        _monogram,
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                    ),
+                    _CompanyLogoBadge(company: company, monogram: _monogram),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -446,6 +422,68 @@ class _CompanyPickTile extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompanyLogoBadge extends StatelessWidget {
+  const _CompanyLogoBadge({
+    required this.company,
+    required this.monogram,
+  });
+
+  final Company company;
+  final String monogram;
+
+  @override
+  Widget build(BuildContext context) {
+    final logo = AppConfig.companyLogoAsset(company);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: SizedBox(
+        width: 52,
+        height: 52,
+        child: logo != null
+            ? Image.asset(
+                logo,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _MonogramFallback(monogram: monogram),
+              )
+            : _MonogramFallback(monogram: monogram),
+      ),
+    );
+  }
+}
+
+class _MonogramFallback extends StatelessWidget {
+  const _MonogramFallback({required this.monogram});
+
+  final String monogram;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.14),
+            AppColors.secondary.withValues(alpha: 0.18),
+          ],
+        ),
+      ),
+      child: Text(
+        monogram,
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w800,
+          fontSize: 15,
+          letterSpacing: 0.4,
         ),
       ),
     );
