@@ -99,14 +99,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 if (session != null)
                   Card(
                     child: ListTile(
-                      leading: CircleAvatar(
-                        child: Text(
-                          _initials(
-                            session.displayName.isEmpty
-                                ? session.username
-                                : session.displayName,
-                          ),
-                        ),
+                      leading: CompanyLogo(
+                        company: state.company,
+                        size: 48,
+                        borderRadius: 12,
                       ),
                       title: Text(
                         session.displayName.isEmpty
@@ -284,16 +280,6 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
     );
-  }
-
-  String _initials(String name) {
-    final parts = name
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((e) => e.isNotEmpty)
-        .toList();
-    if (parts.isEmpty) return '?';
-    return parts.take(2).map((e) => e[0].toUpperCase()).join();
   }
 
   Future<void> _saveFilters({

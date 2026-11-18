@@ -61,15 +61,10 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.white.withValues(alpha: 0.2),
-                        child: Text(
-                          state.company.shortName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
+                      CompanyLogo(
+                        company: state.company,
+                        size: 44,
+                        borderRadius: 12,
                       ),
                       const SizedBox(width: 12),
                       Expanded(

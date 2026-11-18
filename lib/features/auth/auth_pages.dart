@@ -337,14 +337,6 @@ class _CompanyPickTile extends StatelessWidget {
   final Animation<double> animation;
   final VoidCallback onTap;
 
-  String get _monogram {
-    final raw = company.shortName.trim();
-    if (raw.isEmpty) return '?';
-    final compact = raw.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
-    if (compact.length <= 3) return compact.toUpperCase();
-    return compact.substring(0, 3).toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
     final start = (0.35 + index * 0.12).clamp(0.0, 0.85);
@@ -381,7 +373,7 @@ class _CompanyPickTile extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
                 child: Row(
                   children: [
-                    _CompanyLogoBadge(company: company, monogram: _monogram),
+                    CompanyLogo(company: company, size: 52, borderRadius: 14),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -422,68 +414,6 @@ class _CompanyPickTile extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CompanyLogoBadge extends StatelessWidget {
-  const _CompanyLogoBadge({
-    required this.company,
-    required this.monogram,
-  });
-
-  final Company company;
-  final String monogram;
-
-  @override
-  Widget build(BuildContext context) {
-    final logo = AppConfig.companyLogoAsset(company);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: SizedBox(
-        width: 52,
-        height: 52,
-        child: logo != null
-            ? Image.asset(
-                logo,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _MonogramFallback(monogram: monogram),
-              )
-            : _MonogramFallback(monogram: monogram),
-      ),
-    );
-  }
-}
-
-class _MonogramFallback extends StatelessWidget {
-  const _MonogramFallback({required this.monogram});
-
-  final String monogram;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withValues(alpha: 0.14),
-            AppColors.secondary.withValues(alpha: 0.18),
-          ],
-        ),
-      ),
-      child: Text(
-        monogram,
-        style: const TextStyle(
-          color: AppColors.primary,
-          fontWeight: FontWeight.w800,
-          fontSize: 15,
-          letterSpacing: 0.4,
         ),
       ),
     );
@@ -558,16 +488,11 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  child: Text(
-                    state.company.shortName,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.primary,
-                    ),
+                Center(
+                  child: CompanyLogo(
+                    company: state.company,
+                    size: 88,
+                    borderRadius: 20,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -757,6 +682,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final company = context.watch<AppState>().company;
     return Scaffold(
       appBar: AppBar(title: const Text('Registrasi')),
       body: SingleChildScrollView(
@@ -766,6 +692,23 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Center(
+                child: CompanyLogo(
+                  company: company,
+                  size: 72,
+                  borderRadius: 18,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                company.name,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 20),
               _field(_idNumber, 'Nomor ID (KTP/NPWP)', Icons.badge_outlined),
               _field(_username, 'Username', Icons.person_outline),
               _field(_password, 'Password', Icons.lock_outline, obscure: true),
@@ -899,12 +842,21 @@ class TermsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final company = context.watch<AppState>().company.name;
+    final selected = context.watch<AppState>().company;
+    final company = selected.name;
     return Scaffold(
       appBar: AppBar(title: const Text('Syarat & Ketentuan')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          Center(
+            child: CompanyLogo(
+              company: selected,
+              size: 72,
+              borderRadius: 18,
+            ),
+          ),
+          const SizedBox(height: 16),
           const Text(
             'Dokumen Persyaratan Registrasi',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),

@@ -37,6 +37,78 @@ class GradientHeader extends StatelessWidget {
   }
 }
 
+class CompanyLogo extends StatelessWidget {
+  const CompanyLogo({
+    super.key,
+    required this.company,
+    this.size = 52,
+    this.borderRadius,
+    this.fit = BoxFit.cover,
+  });
+
+  final Company company;
+  final double size;
+  final double? borderRadius;
+  final BoxFit fit;
+
+  String get _monogram {
+    final raw = company.shortName.trim();
+    if (raw.isEmpty) return '?';
+    final compact = raw.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
+    if (compact.length <= 3) return compact.toUpperCase();
+    return compact.substring(0, 3).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = borderRadius ?? size * 0.27;
+    final logo = AppConfig.companyLogoAsset(company);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: logo != null
+            ? ColoredBox(
+                color: Colors.black,
+                child: Image.asset(
+                  logo,
+                  fit: fit,
+                  errorBuilder: (_, __, ___) => _fallback(),
+                ),
+              )
+            : _fallback(),
+      ),
+    );
+  }
+
+  Widget _fallback() {
+    return Container(
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius ?? size * 0.27),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.14),
+            AppColors.secondary.withValues(alpha: 0.18),
+          ],
+        ),
+      ),
+      child: Text(
+        _monogram,
+        style: TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w800,
+          fontSize: size * 0.28,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
+  }
+}
+
 class SectionTitle extends StatelessWidget {
   const SectionTitle({super.key, required this.title, this.trailing});
   final String title;
