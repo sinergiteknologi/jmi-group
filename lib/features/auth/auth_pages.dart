@@ -101,6 +101,16 @@ class _SplashPageState extends State<SplashPage>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Spacer(),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: Image.asset(
+                                'assets/venus.png',
+                                width: 72,
+                                height: 72,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
                             Text(
                               'VENUS',
                               style: TextStyle(
