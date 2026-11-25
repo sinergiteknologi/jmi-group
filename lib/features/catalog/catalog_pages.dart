@@ -358,13 +358,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Product get product => widget.product;
   int get _stock => _detail?.stock ?? product.stock;
   int get _maxQty => maxOrderQty(_stock, product.descUom);
-  /// 1 SET = N PACK. Pakai stok list (selaras angka di UOM1),
-  /// contoh: 143 PACK ÷ 11 = 13 — jangan bagi stok detail (bisa beda).
-  double get _packsPerSet => packsPerSet(
-        product.descUom,
-        product.stock > 0 ? product.stock : _stock,
-      );
-  int get _qtyPacks => (_qty * _packsPerSet).round();
 
   @override
   void initState() {
@@ -513,13 +506,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           label: 'Stok',
                           value: '$_stock (${product.descUom})',
                         ),
-                        if (_packsPerSet > 1)
-                          InfoTile(
-                            icon: Icons.swap_horiz_outlined,
-                            label: 'Konversi',
-                            value:
-                                '1 SET = ${formatPacks(_packsPerSet)} PACK',
-                          ),
                       ],
                     ),
                   ),
@@ -565,21 +551,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                     ],
                   ),
-                  if (_packsPerSet > 1) ...[
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        '≈ ${formatNumber(_qtyPacks)} PACK '
-                        '($_qty SET × ${formatPacks(_packsPerSet)})',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
                 const SizedBox(height: 20),
                 Row(

@@ -18,9 +18,9 @@ class _SettingsPageState extends State<SettingsPage> {
   List<CategoryItem> _categories = const [];
   final _categorySearch = TextEditingController();
   final Set<String> _expandedGroups = {};
-  bool _inStock = false;
-  bool _soldOut = false;
-  bool _comingSoon = false;
+  bool _inStock = true;
+  bool _soldOut = true;
+  bool _comingSoon = true;
   bool _loading = true;
 
   @override

@@ -99,9 +99,9 @@ class SessionStore {
   Future<({bool inStock, bool soldOut, bool comingSoon})> stockFilters() async {
     final prefs = await _prefs;
     return (
-      inStock: prefs.getBool(_kViewInStock) ?? false,
-      soldOut: prefs.getBool(_kViewSoldOut) ?? false,
-      comingSoon: prefs.getBool(_kViewComingSoon) ?? false,
+      inStock: prefs.getBool(_kViewInStock) ?? true,
+      soldOut: prefs.getBool(_kViewSoldOut) ?? true,
+      comingSoon: prefs.getBool(_kViewComingSoon) ?? true,
     );
   }
 
